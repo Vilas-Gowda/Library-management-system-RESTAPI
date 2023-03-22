@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect("users.sqlite")
+conn = sqlite3.connect("tables.sqlite")
 cursor = conn.cursor()
 
 query1 = """
@@ -17,20 +17,38 @@ CREATE TABLE admin (
     password text NOT NULL
     )
 """
-
+query31 = """
+INSERT INTO users (username, password) values("demo","demo123")
+"""
 query3 = """
-INSERT INTO admin(username, password) values("admin2","admin123")
+INSERT INTO admin(username, password) values("admin","admin123")
 """
 
-query4 = "DROP TABLE admin"
-query5 = "DROP TABLE users"
-
 #cursor.execute(query1)
-cursor.execute(query2)
-cursor.execute(query3)
-#cursor.execute(query4)
-#cursor.execute(query5)
+#cursor.execute(query2)
+#cursor.execute(query3)
 
 
+query7 = """
+CREATE TABLE books (
+    bookid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name text NOT NULL,
+    ISBN int NOT NULL,
+    author text NOT NULL,
+    releasedate text NOT NULL
+)
+"""
+
+query8 = """
+INSERT INTO books (name, ISBN, author, releasedate) values ("Harry Potter and the Philosopher's Stone", 9780747532743, "J.K Rowling", "FEB 2002")
+"""
+
+#cursor.execute(query7)
+#cursor.execute(query8)
+
+username = "demo"
+cursor = cursor.execute("SELECT password FROM users WHERE username=?",(username,))
+row = cursor.fetchone()
+print(row[0])
 conn.commit()
 conn.close()
