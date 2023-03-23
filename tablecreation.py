@@ -7,21 +7,23 @@ query1 = """
 CREATE TABLE users (
     userid INTEGER PRIMARY KEY AUTOINCREMENT,
     username text NOT NULL,
-    password text NOT NULL
+    password text NOT NULL,
+    email text NOT NULL
     )
 """
 query2 = """
 CREATE TABLE admin (
     adminid INTEGER PRIMARY KEY AUTOINCREMENT,
     username text NOT NULL,
-    password text NOT NULL
+    password text NOT NULL,
+    email text NOT NULL
     )
 """
 query31 = """
-INSERT INTO users (username, password) values("demo","demo123")
+INSERT INTO users (username, password, email) values("demo","demo123","demo@gmail.com")
 """
 query3 = """
-INSERT INTO admin(username, password) values("admin","admin123")
+INSERT INTO admin(username, password, email) values("admin","admin123","admin@gmail.com")
 """
 
 #cursor.execute(query1)
@@ -35,20 +37,26 @@ CREATE TABLE books (
     name text NOT NULL,
     ISBN int NOT NULL,
     author text NOT NULL,
-    releasedate text NOT NULL
+    releasedate text NOT NULL,
+    no_of_copies int NOT NULL
 )
 """
 
 query8 = """
-INSERT INTO books (name, ISBN, author, releasedate) values ("Harry Potter and the Philosopher's Stone", 9780747532743, "J.K Rowling", "FEB 2002")
+INSERT INTO books (name, ISBN, author, releasedate, no_of_copies) values ("Harry Potter and the Philosopher's Stone", 9780747532743, "J.K Rowling", "FEB 2002", 10)
 """
 
 #cursor.execute(query7)
 #cursor.execute(query8)
 
-username = "demo"
-cursor = cursor.execute("SELECT password FROM users WHERE username=?",(username,))
-row = cursor.fetchone()
-print(row[0])
+
+query9 = """
+CREATE TABLE lending (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bookid INTEGER REFERENCES books(bookid),
+    userid INTEGER REFERENCES users(userid)
+)
+"""
+cursor.execute(query9)
 conn.commit()
 conn.close()
