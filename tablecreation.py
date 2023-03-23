@@ -54,9 +54,13 @@ query9 = """
 CREATE TABLE lending (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bookid INTEGER REFERENCES books(bookid),
-    userid INTEGER REFERENCES users(userid)
+    userid INTEGER REFERENCES users(userid),
+    borrowdate text NOT NULL,
+    returnbefore text NOT NULL
 )
 """
+
+
 cursor.execute(query9)
 conn.commit()
 conn.close()
