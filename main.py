@@ -120,6 +120,9 @@ class author(Resource):
         cursor = conn.cursor()
         author_name = request.headers.get("authorname")
 
+        if author_name is None:
+            return "header with authorname not included", 404
+        
         cursor = cursor.execute("SELECT bookid, name, ISBN, author, releasedate, no_of_copies FROM books WHERE author=?",(author_name,))
         booklist = [ 
             dict( id = row[0], name = row[1], ISBN = row[2], author = row[3], releasedate = row[4], no_of_copies = row[5]) for row in cursor.fetchall()
@@ -179,7 +182,7 @@ class returnbook(Resource):
         cursor = conn.cursor()
         username = auth.username()
 
-        userid = cursor.execute("SELECT userid FROM books WHERE username =?",(username,))
+        userid = cursor.execute("SELECT userid FROM users WHERE username =?",(username,))
         userid = userid.fetchone()
         userid = userid[0]
 
@@ -187,10 +190,10 @@ class returnbook(Resource):
         lendid = lendid.fetchone()
         
         if lendid is None:
-            return f"User {userid} hasn't borrowd book {id}", 200
+            return f"User {username} hasn't borrowd book {id} from library", 200
         
-        cursor.execute("DELETE FROM lending WHERE id=?",(lendid,))
-        cursor.execute("UPDATE FROM books SET no_of_copies = no_of_copies + 1 WHERE bookid = ?",(id,))
+        cursor.execute("DELETE FROM lending WHERE id=?",(lendid[0],))
+        cursor.execute("UPDATE books SET no_of_copies = no_of_copies + 1 WHERE bookid = ?",(id,))
         conn.commit()
         conn.close()
 
@@ -208,7 +211,7 @@ class mybooks(Resource):
         userid = userid.fetchone()
         userid = userid[0]
 
-        lendlist = cursor.execute("SELECT id, userid, bookid, borrowdate, returnbefore FROM lending WHERE id = ?",(userid,))
+        lendlist = cursor.execute("SELECT id, userid, bookid, borrowdate, returnbefore FROM lending WHERE userid = ?",(userid,))
         lendlist =[
             dict(lendid = row[0], Userid= row[1], bookid = row[2], borrowdate = row[3], returnbefore = row[4]) for row in lendlist.fetchall()
         ]
@@ -217,7 +220,30 @@ class mybooks(Resource):
         else:
             return f"User {userid} has borrowed no books from the library", 200
         
+class bookadd(Resource):
+    @auth.login_required(role='admin')
+    def post(self):
+        conn = sqlite3.connect("tables.sqlite")
+        cursor = conn.cursor()
+        bookname = request.headers.get('name')
+        bookISBN = request.headers.get('ISBN')
+        bookauthor = request.headers.get('author')
+        bookreleasedate = request.headers.get('releasedate')
+        booknoc = request.headers.get('noofcopies')
+        
+        if bookname and bookISBN and bookauthor and bookreleasedate and booknoc:
+            namedup = cursor.execute("SELECT bookid FROM books WHERE name = ?",(bookname,))
+            namedup = namedup.fetchone()
+            
+            if namedup is not None:
+                return f"Book with name {bookname} already exists in the library", 200
 
+            cursor.execute("INSERT INTO books (name, ISBN, author, releasedate, no_of_copies) values (?, ?, ?, ?, ?)",(bookname, bookISBN, bookauthor, bookreleasedate, booknoc))
+            conn.commit()
+            conn.close()
+            return f"Book '{bookname}' has been successfully added to the library", 201
+        else:
+            return "One or more required headers missing", 404
 
 api.add_resource(guestregister,'/register')
 api.add_resource(guestbooks, '/guest/books')
@@ -230,6 +256,30 @@ api.add_resource(unregister, '/unregister')
 api.add_resource(borrow, '/book/borrow/<int:id>')
 api.add_resource(returnbook, '/book/return/<int:id>')
 api.add_resource(mybooks, '/mybooks')
+api.add_resource(bookadd, '/book/add')
+
+
+
+
+
+@auth.get_user_roles
+def get_user_roles(user):
+    conn = sqlite3.connect("tables.sqlite")
+    cursor = conn.cursor()
+    adminid = cursor.execute("SELECT adminid FROM admin WHERE username=?",(user.username,))
+    adminid = adminid.fetchone()
+    userid = cursor.execute("SELECT userid FROM users WHERE username=?",(user.username,))
+    userid = userid.fetchone()
+    print(userid, adminid)
+    if adminid is not None:
+        return ['admin']
+    elif userid is not None:
+        return ['user']
+    else:
+        return ['guest']
+
+
+
 
 @auth.verify_password
 def authenticate(username, password):
