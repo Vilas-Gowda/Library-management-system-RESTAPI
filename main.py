@@ -270,12 +270,14 @@ def get_user_roles(user):
     adminid = adminid.fetchone()
     userid = cursor.execute("SELECT userid FROM users WHERE username=?",(user.username,))
     userid = userid.fetchone()
-    print(userid, adminid)
     if adminid is not None:
+        print("admin")
         return ['admin']
     elif userid is not None:
+        print("user")
         return ['user']
     else:
+        print("guest")
         return ['guest']
 
 
