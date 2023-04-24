@@ -16,7 +16,6 @@ class guestbooks(Resource):
     def get(self):
         conn = sqlite3.connect("tables.sqlite")
         cursor = conn.cursor()
-
         cursor = cursor.execute("SELECT bookid,name FROM books")
 
         booklist = [ 
@@ -66,7 +65,6 @@ class books(Resource):
     def get(self):
         conn = sqlite3.connect("tables.sqlite")
         cursor = conn.cursor()
-
         cursor = cursor.execute("SELECT bookid, name, ISBN, author, releasedate, no_of_copies FROM books")
 
         booklist = [ 
